@@ -189,6 +189,8 @@ CGFloat const STPPaymentCardTextFieldMinimumPadding = 10;
     UIView *fieldsView = [[UIView alloc] init];
     fieldsView.clipsToBounds = YES;
     fieldsView.backgroundColor = [UIColor clearColor];
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(fieldsViewTapHandler:)];
+    [fieldsView addGestureRecognizer:tap];
     self.fieldsView = fieldsView;
 
     self.allFields = @[numberField,
@@ -214,6 +216,55 @@ CGFloat const STPPaymentCardTextFieldMinimumPadding = 10;
     
     self.viewModel.postalCodeRequested = YES;
     self.countryCode = [[NSLocale autoupdatingCurrentLocale] objectForKey:NSLocaleCountryCode];
+}
+
+- (void)fieldsViewTapHandler:(UITapGestureRecognizer *)sender {
+    CGPoint point = [sender locationInView:self.fieldsView];
+    STPFormTextField *field = [self nearestViewFrom:point];
+    [field becomeFirstResponder];
+}
+
+- (STPFormTextField *)nearestViewFrom:(CGPoint)point {
+    CGRect numberRect = self.numberField.frame;
+    CGRect expirationRect = self.expirationField.frame;
+    CGRect cvcRect = self.cvcField.frame;
+    CGRect postalCodeRect = self.postalCodeField.frame;
+    if (CGRectContainsPoint(numberRect, point)) {
+        return self.numberField;
+    } else if (CGRectContainsPoint(expirationRect, point)) {
+        return self.expirationField;
+    } else if (CGRectContainsPoint(cvcRect, point)) {
+        return self.cvcField;
+    } else if (CGRectContainsPoint(postalCodeRect, point)) {
+        return self.postalCodeField;
+    }
+    CGFloat numberDistance = [self minDistanceBetween:numberRect andPoint:point];
+    CGFloat expirationDistance = [self minDistanceBetween:expirationRect andPoint:point];
+    CGFloat cvcDistance = [self minDistanceBetween:cvcRect andPoint:point];
+    CGFloat postalCodeDistance = [self minDistanceBetween:postalCodeRect andPoint:point];
+    CGFloat min1 = MIN(numberDistance, expirationDistance);
+    CGFloat min2 = MIN(cvcDistance, postalCodeDistance);
+    CGFloat min = MIN(min1, min2);
+    if (fabs(min) == fabs(numberDistance)) {
+        return self.numberField;
+    } else if (fabs(min) == fabs(expirationDistance)) {
+        return self.expirationField;
+    } else if (fabs(min) == fabs(cvcDistance)) {
+        return self.cvcField;
+    } else if (fabs(min) == fabs(postalCodeDistance)) {
+        return self.postalCodeField;
+    }
+    return self.numberField;
+}
+
+- (CGFloat)minDistanceBetween:(CGRect)rect andPoint:(CGPoint)point {
+    if (point.x <= rect.origin.x) {
+        return rect.origin.x - point.x;
+    } else if (point.x >= rect.origin.x + rect.size.width) {
+        return point.x - (rect.origin.x + rect.size.width);
+    } else {
+        return 0;
+    }
 }
 
 - (STPPaymentCardTextFieldViewModel *)viewModel {

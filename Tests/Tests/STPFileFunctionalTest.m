@@ -8,9 +8,6 @@
 
 @import XCTest;
 
-#import "STPAPIClient.h"
-#import "STPFile.h"
-#import "STPImageLibrary+Private.h"
 #import "STPTestingAPIClient.h"
 
 @interface STPFileFunctionalTest : XCTestCase
@@ -84,7 +81,6 @@ compatibleWithTraitCollection:nil];
                   [expectation fulfill];
                   XCTAssertNil(file, @"file should be nil");
                   XCTAssertNotNil(error, @"error should not be nil");
-                  XCTAssert([error.localizedDescription rangeOfString:@"asdf"].location != NSNotFound, @"error should contain last 4 of key");
               }];
     
     [self waitForExpectationsWithTimeout:STPTestingNetworkRequestTimeout handler:nil];

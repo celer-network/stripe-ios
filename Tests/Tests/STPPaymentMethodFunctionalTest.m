@@ -9,6 +9,7 @@
 #import <XCTest/XCTest.h>
 #import "STPTestingAPIClient.h"
 
+
 @import Stripe;
 
 @interface STPPaymentMethodFunctionalTest : XCTestCase
@@ -56,8 +57,7 @@
                                    XCTAssertNotNil(paymentMethod.created);
                                    XCTAssertFalse(paymentMethod.liveMode);
                                    XCTAssertEqual(paymentMethod.type, STPPaymentMethodTypeCard);
-                                   XCTAssertEqualObjects(paymentMethod.metadata, @{@"test_key": @"test_value"});
-                                   
+
                                    // Billing Details
                                    XCTAssertEqualObjects(paymentMethod.billingDetails.email, @"email@email.com");
                                    XCTAssertEqualObjects(paymentMethod.billingDetails.name, @"Isaac Asimov");
@@ -125,6 +125,41 @@
         [expectation fulfill];
     }];
     
+    [self waitForExpectationsWithTimeout:5 handler:nil];
+}
+
+- (void)testCreateAlipayPaymentMethod {
+    STPAPIClient *client = [[STPAPIClient alloc] initWithPublishableKey:@"pk_test_JBVAMwnBuzCdmsgN34jfxbU700LRiPqVit"];
+    
+    STPPaymentMethodParams *params = [STPPaymentMethodParams paramsWithAlipay:[STPPaymentMethodAlipayParams new] billingDetails:nil metadata:nil];
+
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Payment Method create"];
+    [client createPaymentMethodWithParams:params
+                               completion:^(STPPaymentMethod *paymentMethod, NSError *error) {
+        XCTAssertNil(error);
+        XCTAssertNotNil(paymentMethod);
+        XCTAssertEqual(paymentMethod.type, STPPaymentMethodTypeAlipay);
+        [expectation fulfill];
+    }];
+    
+    [self waitForExpectationsWithTimeout:5 handler:nil];
+}
+
+- (void)testCreateBLIKPaymentMethod {
+    STPAPIClient *client = [[STPAPIClient alloc] initWithPublishableKey:STPTestingDefaultPublishableKey];
+
+    STPPaymentMethodParams *params = [STPPaymentMethodParams paramsWithBLIK:[STPPaymentMethodBLIKParams new] billingDetails:nil metadata:nil];
+
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Payment Method create"];
+    [client createPaymentMethodWithParams:params
+                               completion:^(STPPaymentMethod *paymentMethod, NSError *error) {
+        XCTAssertNil(error);
+        XCTAssertNotNil(paymentMethod);
+        XCTAssertEqual(paymentMethod.type, STPPaymentMethodTypeBLIK);
+        XCTAssertNotNil(paymentMethod.blik);
+        [expectation fulfill];
+    }];
+
     [self waitForExpectationsWithTimeout:5 handler:nil];
 }
 

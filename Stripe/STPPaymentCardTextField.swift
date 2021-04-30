@@ -704,6 +704,8 @@ open class STPPaymentCardTextField: UIControl, UIKeyInput, STPFormTextFieldDeleg
 
         fieldsView.clipsToBounds = true
         fieldsView.backgroundColor = UIColor.clear
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapFieldsView(_:)))
+        fieldsView.addGestureRecognizer(tapGesture)
 
         allFields = [numberField, expirationField, cvcField, postalCodeField].compactMap { $0 }
 
@@ -727,6 +729,55 @@ open class STPPaymentCardTextField: UIControl, UIKeyInput, STPFormTextFieldDeleg
 
         viewModel.postalCodeRequested = true
         countryCode = Locale.autoupdatingCurrent.regionCode
+    }
+    
+    @objc private func didTapFieldsView(_ sender: UITapGestureRecognizer) {
+        let point = sender.location(in: fieldsView)
+        let field = nearestViewFrom(point: point)
+        field.becomeFirstResponder()
+    }
+    
+    private func nearestViewFrom(point: CGPoint) -> STPFormTextField {
+        let numberRect = numberField.frame
+        let expirationRect = expirationField.frame
+        let cvcRect = cvcField.frame
+        let postalCodeRect = postalCodeField.frame
+        if numberRect.contains(point) {
+            return numberField
+        } else if expirationRect.contains(point) {
+            return expirationField
+        } else if cvcRect.contains(point) {
+            return cvcField
+        } else if postalCodeRect.contains(point) {
+            return postalCodeField
+        }
+        let numberDistance = minDistanceBetween(rect: numberRect, and: point)
+        let expirationDistance = minDistanceBetween(rect: expirationRect, and: point)
+        let cvcDistance = minDistanceBetween(rect: cvcRect, and: point)
+        let postalCodeDistance = minDistanceBetween(rect: postalCodeRect, and: point)
+        let min1 = min(numberDistance, expirationDistance)
+        let min2 = min(cvcDistance, postalCodeDistance)
+        let min = min(min1, min2)
+        if abs(min) == abs(numberDistance) {
+            return numberField
+        } else if abs(min) == abs(expirationDistance) {
+            return expirationField
+        } else if abs(min) == abs(cvcDistance) {
+            return cvcField
+        } else if abs(min) == abs(postalCodeDistance) {
+            return postalCodeField
+        }
+        return numberField
+    }
+    
+    private func minDistanceBetween(rect: CGRect, and point: CGPoint) -> CGFloat {
+        if (point.x <= rect.origin.x) {
+            return rect.origin.x - point.x
+        } else if (point.x >= rect.origin.x + rect.size.width) {
+            return point.x - (rect.origin.x + rect.size.width)
+        } else {
+            return 0
+        }
     }
 
     // MARK: appearance properties
